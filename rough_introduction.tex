@@ -1,0 +1,159 @@
+\documentclass{jsarticle}
+\makeatletter
+  \usepackage{expandparams}
+%
+  \newcommand{\sepbybra}[1]{\@tfor\ch:=#1\do{[\ch]}}%
+  \newcommand{\sepbybraparen}[2]{\@tfor\ch:=#1\do{[\ch]}\@tfor\ch:=#2\do{(\ch)}}%
+  \newcommand{\separatetokens}[3]{\@tfor\ch:=#1\do{[\ch]}\@tfor\ch:=#2\do{(\ch)}\@tfor\ch:=#3\do{\{\ch\}}}%
+  \def\csone{JK}%
+  \def\cstwo{\csone F}
+  \newtoks\temptl%
+  \newtoks\temptlii%
+  \newtoks\temptoken%
+  \temptl={L\csone M}%
+%
+  \usepackage{url}
+  \usepackage{ascmac}
+  \usepackage[T1]{fontenc}
+  \newcommand{\texcmd}[1]{\texttt{\textbackslash #1}}
+  \title{Rough Introduction to \texttt{expandparams}}
+  \author{\url{@bd_gfngfn} on Twitter, \url{gfngfn} on GitHub}
+  \date{2014/10/5}
+\makeatother
+\begin{document}
+  \maketitle
+  \section{Usage of \texcmd{expandparams} and \texcmd{prexp}}
+  \indent When you want to expand parameters before the main control sequence is expanded,
+    \texcmd{expandparams} makes you save the cost writing thousants of \texcmd{expandafter}.
+    For example, let \texcmd{csone}, \texcmd{cstwo} and \texcmd{separatetokens} be defined by below:
+\begin{itembox}{code}
+\begin{verbatim}
+\def\csone{JK}%
+\def\cstwo{\csone F}%
+\newcommand{\separatetokens}[3]{%
+  \@tfor\ch:=#1\do{[\ch]}%
+  \@tfor\ch:=#2\do{(\ch)}%
+  \@tfor\ch:=#3\do{\{\ch\}}%
+}%
+\end{verbatim}
+\end{itembox}
+    When you want to expand \texcmd{csone} and \texcmd{cstwo} before \texcmd{separatetokens} is expanded,
+    you can use \texcmd{prexp} and write
+\begin{itembox}{code}
+\begin{verbatim}
+\expandparams{\separatetokens\prexp{\csone V}{CD}\prexp{\cstwo W}}
+\end{verbatim}
+\end{itembox}
+    instead of
+\begin{itembox}{code}
+\begin{verbatim}
+\expandafter\expandafter\expandafter\separatetokens%
+\expandafter\expandafter\expandafter%
+{\expandafter\csone\expandafter V\expandafter}\expandafter%
+{\expandafter C\expandafter D\expandafter}\expandafter{\cstwo W}
+\end{verbatim}
+\end{itembox}
+    to gain \expandparams{\separatetokens\prexp{\csone V}{CD}\prexp{\cstwo W}}.
+    Similarly, when you want to expand \texcmd{cstwo} \textit{twice} before \texcmd{separatetokens} is expanded,
+    you can use double \texcmd{prexp} and write
+\begin{itembox}{code}
+\begin{verbatim}
+\expandparams{\separatetokens{AB}{CD}\prexp\prexp{\cstwo W}}
+\end{verbatim}
+\end{itembox}
+    instead of
+\begin{itembox}{code}
+\begin{verbatim}
+\expandafter\expandafter\expandafter\separatetokens%
+\expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter A%
+\expandafter\expandafter\expandafter B\expandafter\expandafter\expandafter}%
+\expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter C%
+\expandafter\expandafter\expandafter D\expandafter\expandafter\expandafter}%
+\expandafter\expandafter\expandafter{\cstwo W}
+\end{verbatim}
+\end{itembox}
+    to gain \expandparams{\separatetokens{AB}{CD}\prexp\prexp{\cstwo W}}.
+    Indeed the results of these two ways coincide with each other:\par
+  \begin{center}
+    \begin{tabular}{ll}
+    \hline
+      Using \texcmd{expandafter}:&
+        \expandafter\expandafter\expandafter\separatetokens%
+        \expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter A%
+        \expandafter\expandafter\expandafter B\expandafter\expandafter\expandafter}%
+        \expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter C%
+        \expandafter\expandafter\expandafter D\expandafter\expandafter\expandafter}%
+        \expandafter\expandafter\expandafter{\cstwo W}%
+    \\
+    \hline
+      Using \texcmd{expandparams}:&
+        \expandparams{\separatetokens{AB}{CD}\prexp\prexp{\cstwo W}}
+    \\
+    \hline
+    \end{tabular}
+  \end{center}
+%
+  \section{Small Experiments}
+  \noindent \the\temptl; \expandafter\sepbybra\expandafter{\the\temptl}\par
+%
+  \inserttoken{\temptl}{0}{X}%
+  \noindent \the\temptl; \expandafter\sepbybra\expandafter{\the\temptl}\par
+%
+  \inserttoken{\temptl}{2}{Y}%
+  \noindent \the\temptl; \expandafter\sepbybra\expandafter{\the\temptl}\par
+%
+  \inserttoken{\temptl}{5}{\csone}%
+  \noindent \the\temptl; \expandafter\sepbybra\expandafter{\the\temptl}\par
+%
+  \deletetoken{\temptl}{1}%
+  \noindent \the\temptl; \expandafter\sepbybra\expandafter{\the\temptl}\par
+%
+  \deletetoken{\temptl}{2}%
+  \noindent \the\temptl; \expandafter\sepbybra\expandafter{\the\temptl}\par
+%
+  \gettoken{\temptl}{0}{\temptoken}%
+  \noindent 0: \the\temptoken; \expandafter\sepbybra\expandafter{\the\temptoken}\par
+%
+  \gettoken{\temptl}{1}{\temptoken}%
+  \noindent 1: \the\temptoken; \expandafter\sepbybra\expandafter{\the\temptoken}\par
+%
+  \gettoken{\temptl}{2}{\temptoken}%
+  \noindent 2: \the\temptoken; \expandafter\sepbybra\expandafter{\the\temptoken}\par
+%
+  \gettoken{\temptl}{3}{\temptoken}%
+  \noindent 3: \the\temptoken; \expandafter\sepbybra\expandafter{\the\temptoken}\par
+%
+  \inserttoken{\temptl}{2}{{DE}}%
+  \noindent \the\temptl; \expandafter\sepbybra\expandafter{\the\temptl}\par
+%
+  \gettoken{\temptl}{2}{\temptoken}%
+  \noindent 2: \the\temptoken; \expandafter\sepbybra\expandafter{\the\temptoken}\par
+%
+  \deletetoken{\temptl}{1}
+  \noindent \the\temptl; \expandafter\sepbybra\expandafter{\the\temptl}\par
+%
+  \inserttoken{\temptl}{1}{UV}
+  \noindent \the\temptl; \expandafter\sepbybra\expandafter{\the\temptl}\par
+%
+  \expandtokenlist{\temptl}{\temptlii}
+  \noindent \the\temptlii; \expandafter\sepbybra\expandafter{\the\temptlii}\par
+%
+  \noindent Ordinary: \sepbybra{\csone R}\par
+  \noindent Using \texcmd{expandparams}: \expandparams{\sepbybra \prexp{\csone R}}\par
+%
+  \noindent Ordinary: \expandparams{\sepbybra{\cstwo S}}\par
+  \noindent Using \texcmd{expandparams}:：\expandparams{\sepbybra \prexp{\cstwo S}}\par
+%
+  \noindent Ordinary: \expandparams{\sepbybra{{PQ}A}}\par
+  \noindent Using \texcmd{expandparams}:：\expandparams{\sepbybra \prexp{{PQ}A}}\par
+%
+  \noindent Ordinary: \expandparams{\sepbybraparen{AB}{\csone W}}\par
+  \noindent Using \texcmd{expandparams}:：\expandparams{\sepbybraparen{AB}\prexp{\csone W}}\par
+%
+  \noindent Ordinary: \expandparams{\sepbybraparen{\cstwo}{\csone W}}\par
+  \noindent Using expandparams:：\expandparams{\sepbybraparen\prexp{\cstwo}\prexp{\csone W}}\par
+%
+  \noindent Ordinary: \expandparams{\sepbybra{\cstwo}}\par
+  \noindent Using \texcmd{expandparams}:：\expandparams{\sepbybra\prexp\prexp{\cstwo}}\par
+%
+\end{document}

@@ -1,0 +1,220 @@
+\newtoks\l@toks%
+\newcount\i@count%
+\newcommand{\inserttoken}[3]{%
+  \i@count=0%
+  \l@toks={}%
+  \def\inserted@defcs{#3}%
+  \expandafter\@tfor\expandafter\t@tforcs\expandafter:\expandafter=\the#1\do{%
+    \ifnum\i@count=#2%
+      \expandafter\ifpluraltokenlist\expandafter{\t@tforcs}{%
+        \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter%
+          \l@toks%
+        \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter%
+          =%
+        \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter%
+          {%
+        \expandafter\expandafter\expandafter%
+          \the%
+        \expandafter\expandafter\expandafter%
+          \l@toks%
+        \expandafter%
+          \inserted@defcs%
+        \expandafter%
+          {%
+          \t@tforcs%
+          }%
+          }%
+      }{%
+        \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter%
+          \l@toks%
+        \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter%
+          =%
+        \expandafter\expandafter\expandafter\expandafter\expandafter\expandafter\expandafter%
+          {%
+        \expandafter\expandafter\expandafter%
+          \the%
+        \expandafter\expandafter\expandafter%
+          \l@toks%
+        \expandafter
+          \inserted@defcs%
+          \t@tforcs%
+          }%
+        }%
+    \else%
+      \expandafter\ifpluraltokenlist\expandafter{\t@tforcs}{%
+        \expandafter\expandafter\expandafter%
+          \l@toks%
+        \expandafter\expandafter\expandafter%
+          =%
+        \expandafter\expandafter\expandafter%
+          {%
+        \expandafter%
+          \the%
+        \expandafter%
+          \l@toks%
+        \expandafter%
+          {%
+          \t@tforcs%
+          }%
+          }%
+      }{%
+        \expandafter\expandafter\expandafter%
+          \l@toks%
+        \expandafter\expandafter\expandafter%
+          =%
+        \expandafter\expandafter\expandafter%
+          {%
+        \expandafter%
+          \the%
+        \expandafter%
+          \l@toks%
+          \t@tforcs%
+          }%
+      }%
+    \fi%
+    \advance\i@count by1%
+  }%
+  \ifnum\i@count=#2%––”ö‚É’Ç‰Á‚·‚é‚Æ‚«
+      \expandafter\expandafter\expandafter%
+        \l@toks%
+      \expandafter\expandafter\expandafter%
+        =%
+      \expandafter\expandafter\expandafter%
+        {%
+      \expandafter%
+        \the%
+      \expandafter%
+        \l@toks%
+        \inserted@defcs%
+        %
+        }%
+  \else%
+  \fi%
+  #1=\l@toks%
+}%
+\newcommand{\deletetoken}[2]{%
+  \i@count=0%
+  \l@toks={}%
+  \expandafter\@tfor\expandafter\t@tforcs\expandafter:\expandafter=\the#1\do{%
+    \ifnum\i@count=#2%
+      \expandafter%
+        \l@toks%
+      \expandafter%
+        =%
+      \expandafter%
+        {%
+        \the%
+        \l@toks%
+        }%
+    \else%
+      \expandafter\ifpluraltokenlist\expandafter{\t@tforcs}{%
+        \expandafter\expandafter\expandafter%
+          \l@toks%
+        \expandafter\expandafter\expandafter%
+          =%
+        \expandafter\expandafter\expandafter%
+          {%
+        \expandafter%
+          \the%
+        \expandafter%
+          \l@toks%
+        \expandafter%
+          {%
+          \t@tforcs%
+          }%
+          }%
+      }{%
+        \expandafter\expandafter\expandafter%
+          \l@toks%
+        \expandafter\expandafter\expandafter%
+          =%
+        \expandafter\expandafter\expandafter%
+          {%
+        \expandafter%
+          \the%
+        \expandafter%
+          \l@toks%
+          \t@tforcs%
+          }%
+      }%
+    \fi%
+    \advance\i@count by1%
+  }%
+  #1=\l@toks%
+}%
+\newcommand{\gettoken}[3]{%
+  \i@count=0%
+  #3={}%
+  \expandafter\@tfor\expandafter\t@tforcs\expandafter:\expandafter=\the#1\do{%
+    \ifnum\i@count=#2%
+      \expandafter\ifpluraltokenlist\expandafter{\t@tforcs}{%
+        \expandafter#3\expandafter=\expandafter{\expandafter{\t@tforcs}}%
+      }{%
+        \expandafter#3\expandafter=\expandafter{\t@tforcs}%
+      }%
+    \fi%
+    \advance\i@count by1%
+  }%
+}%
+\newcount\ptl@count%
+\newcommand{\ifpluraltokenlist}[3]{%
+  \ptl@count=0%
+  \@tfor\ptl@tforcs:=#1\do{\advance\ptl@count by1}%
+  \ifnum\ptl@count>1%
+    #2%
+  \else%
+    #3%
+  \fi%
+}%
+\newtoks\tlxp@toks%
+\newtoks\getxp@toks%
+\newtoks\expanded@toks%
+\newcount\ixp@count%
+\newcount\jxp@count%
+\newif\iffoundprexp%
+\def\prexpsub{\prexp}%
+\newcommand{\expandparams}[1]{%
+  \tlxp@toks={#1}%
+  \ixp@count=0%
+  %<loop (to search \prexp)>
+  \loop
+    \foundprexpfalse%
+    %<loop (for each token)>
+    \expandafter\@tfor\expandafter\txp@tforcs\expandafter:\expandafter=\the\tlxp@toks\do{%
+      \ifx\txp@tforcs\prexpsub%
+        \iffoundprexp%
+        \else%
+          \foundprexptrue%
+          \jxp@count=\ixp@count%
+          \advance\jxp@count by1%
+          \gettoken{\tlxp@toks}{\jxp@count}{\getxp@toks}% get the token next to \prexp
+          \expandafter\def\expandafter\tempparam@defcs\expandafter{\the\getxp@toks}%
+          \ifx\tempparam@defcs\prexpsub%
+            \foundprexpfalse%
+          \else%
+            \deletetoken{\tlxp@toks}{\ixp@count}% delete \prexp
+            \expandtokenlist{\getxp@toks}{\expanded@toks}%
+            \deletetoken{\tlxp@toks}{\ixp@count}%
+            \expandafter\inserttoken\expandafter{\expandafter\tlxp@toks\expandafter}\expandafter{\expandafter\ixp@count\expandafter}\expandafter{\expandafter{\the\expanded@toks}}%
+          \fi%
+        \fi%
+      \fi%
+      \advance\ixp@count by1%
+    }%
+    %</loop>
+    \ixp@count=0%
+  \iffoundprexp \repeat%
+  %</loop>
+  \the\tlxp@toks%
+}%
+\newif\ifreadfirsttoken@bool%
+\newcommand{\expandtokenlist}[2]{%
+  \readfirsttoken@boolfalse%
+  \expandafter\@tfor\expandafter\xptl@tforcs\expandafter:\expandafter=\the#1\do{%
+    \ifreadfirsttoken@bool%
+    \else%
+      \expandafter\expandafter\expandafter#2\expandafter\expandafter\expandafter=\expandafter\expandafter\expandafter{\xptl@tforcs}%
+      \readfirsttoken@booltrue%
+    \fi%
+  }%
+}%
