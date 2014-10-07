@@ -16,9 +16,9 @@
   \usepackage{ascmac}
   \usepackage[T1]{fontenc}
   \newcommand{\texcmd}[1]{\texttt{\textbackslash #1}}
-  \title{Rough Introduction to \texttt{expandparams}}
+  \title{Rough Introduction to \texttt{expandparams} ver 0.02}
   \author{\url{@bd_gfngfn} on Twitter, \url{gfngfn} on GitHub}
-  \date{2014/10/5}
+  \date{2014/10/7}
 \makeatother
 \begin{document}
   \maketitle
@@ -94,6 +94,11 @@
   \end{center}
 %
   \section{Small Experiments}
+  \indent
+    \texttt{expandparams} also contains some commands other than \texcmd{expandparams} and \texcmd{prexp}.
+    Those are \texcmd{inserttoken}, \texcmd{deletetoken}, \texcmd{gettoken} and \texcmd{expandtokenlist},
+    which enable us to deal with token lists with more ease.
+  \par
   \noindent \the\temptl; \expandafter\sepbybra\expandafter{\the\temptl}\par
 %
   \inserttoken{\temptl}{0}{X}%
@@ -142,18 +147,18 @@
   \noindent Using \texcmd{expandparams}: \expandparams{\sepbybra \prexp{\csone R}}\par
 %
   \noindent Ordinary: \expandparams{\sepbybra{\cstwo S}}\par
-  \noindent Using \texcmd{expandparams}:：\expandparams{\sepbybra \prexp{\cstwo S}}\par
+  \noindent Using \texcmd{expandparams}: \expandparams{\sepbybra \prexp{\cstwo S}}\par
 %
   \noindent Ordinary: \expandparams{\sepbybra{{PQ}A}}\par
-  \noindent Using \texcmd{expandparams}:：\expandparams{\sepbybra \prexp{{PQ}A}}\par
+  \noindent Using \texcmd{expandparams}: \expandparams{\sepbybra \prexp{{PQ}A}}\par
 %
   \noindent Ordinary: \expandparams{\sepbybraparen{AB}{\csone W}}\par
-  \noindent Using \texcmd{expandparams}:：\expandparams{\sepbybraparen{AB}\prexp{\csone W}}\par
+  \noindent Using \texcmd{expandparams}: \expandparams{\sepbybraparen{AB}\prexp{\csone W}}\par
 %
   \noindent Ordinary: \expandparams{\sepbybraparen{\cstwo}{\csone W}}\par
-  \noindent Using expandparams:：\expandparams{\sepbybraparen\prexp{\cstwo}\prexp{\csone W}}\par
+  \noindent Using \texcmd{expandparams}: \expandparams{\sepbybraparen\prexp{\cstwo}\prexp{\csone W}}\par
 %
   \noindent Ordinary: \expandparams{\sepbybra{\cstwo}}\par
-  \noindent Using \texcmd{expandparams}:：\expandparams{\sepbybra\prexp\prexp{\cstwo}}\par
+  \noindent Using \texcmd{expandparams}: \expandparams{\sepbybra\prexp\prexp{\cstwo}}\par
 %
 \end{document}
