@@ -1,0 +1,157 @@
+\documentclass{jsarticle}
+\makeatletter
+  \usepackage{expandparams}
+%
+  \newcommand{\sepbybra}[1]{\@tfor\ch:=#1\do{[\ch]}}%
+  \newcommand{\sepbybraparen}[2]{\@tfor\ch:=#1\do{[\ch]}\@tfor\ch:=#2\do{(\ch)}}%
+  \newcommand{\separatetokens}[3]{\@tfor\ch:=#1\do{[\ch]}\@tfor\ch:=#2\do{(\ch)}\@tfor\ch:=#3\do{\{\ch\}}}%
+  \def\csone{JK}%
+  \def\cstwo{\csone F}
+  \newtoks\temptl%
+  \newtoks\temptlii%
+  \newtoks\temptoken%
+  \temptl={L\csone M}%
+%
+  \usepackage{amsmath}
+  \usepackage{url}
+  \usepackage{ascmac}
+  \usepackage[T1]{fontenc}
+  \usepackage{xcolor}
+%
+  \usepackage{gfncmd}
+%
+  \newcommand{\texcmdplain}[1]{\textbackslash #1}
+  \newcommand{\texcmd}[1]{\textcolor{blue}{\texttt{\texcmdplain{#1}}}}
+  \newcommand{\reqref}{$\empty^{［要出典］}$}
+  \newcommand{\syntaxstyle}[1]{\text{\textcolor{blue}{\texttt{#1}}}}
+  \newcommand{\cflarrow}{\to}
+  \newcommand{\cflbar}{\ |\ }
+%
+  \title{\texttt{expandparams}の用法 第1.00版}
+  \author{gfn（Twitter: \url{@bd_gfngfn}, GitHub: \url{gfngfn}）}
+  %\date{2014/10/9}
+\makeatother
+\begin{document}
+  \maketitle
+  \section{免責}
+  \indent
+    動作には最善を期していますが，
+    \texttt{expandparams}パッケージをユーザーが使用したことによるいかなる損失にも作者gfnは責任を負いません．
+  \par
+  \section{\texttt{expandparams}パッケージの趣旨}
+  \indent
+    \TeX は，その体系がChurch-Rosser性を満たさないが，コンパイラが前から順に展開していくために
+    しばしば展開順序の制御を手動で行なわねばならないということが運命づけられている言語です．
+    展開順序の制御に使われる制御綴はいくつかありますが，特に重宝されている\reqref のは\texcmd{expandafter}でしょう．
+    しかしながら，展開制御のために埋め込まれるこの\texcmd{expandafter}の個数はしばしば皮肉な祝福性を帯びるほどに厖大となり，
+    また，あらゆるコマンドの間に割り込んで可読性と保守性を極めて低いものにしてしまいます．
+    一度慣れてしまえば水や空気のように何事もなく書けてしまう\reqref\texcmd{expandafter}ですが，
+    なんとかもう少し人間に歩み寄った形式が取れないものかと思案した結果
+    考案したのが\texttt{expandparams}パッケージの制御綴\texcmd{expandparams}と\texcmd{prexp}です．
+  \par
+  \section{\texcmd{expandparams}と\texcmd{prexp}の使い方}
+  \indent
+    \texcmd{expandparams}は，入力上先行する制御綴よりも順序的に先に引数を何度か展開したい場合に使うことができ，
+    これにより数百個もの\texcmd{expandafter}を書かずに済むことになります．
+    $n$ を非負整数，$a$ を $n$ 個の引数を取って展開されるトークン，
+    $t$ を $\syntaxstyle{\{}$，$\syntaxstyle{\}}$，$\syntaxstyle{[}$，$\syntaxstyle{]}$ のいずれでもないトークンとして，
+    \texcmd{expandparams}は
+    \begin{align*}
+      E &\cflarrow \syntaxstyle{\texcmdplain{expandparams}} \syntaxstyle{\{} a T_{1} \ldots T_{n} \syntaxstyle{\}}
+    \\
+      T_{i} &\cflarrow B \cflbar \syntaxstyle{\texcmdplain{prexp}} B \quad\paren{i = 1, \ldots, n}
+    \\
+      B &\cflarrow \syntaxstyle{\{} L \syntaxstyle{\}} \cflbar \syntaxstyle{[} L \syntaxstyle{]}
+    \\
+      L &\cflarrow t \cflbar LL \cflbar B
+    \end{align*}
+    の文脈自由文法で表される表現に対して動作することを意図しています．
+    実際にはこれよりも広い表現を受理しますが，これにあてはまらないものは\texcmd{expandparams}の用法として推奨しません．
+    トークン列 $L$ を1回展開したものを $\xi\fprn{L}$ と書くとすると，
+      $\syntaxstyle{\texcmdplain{prexp}\{} L \syntaxstyle{\}}$
+    は
+      $\syntaxstyle{\{} \xi\fprn{L} \syntaxstyle{\}}$
+    に，
+      $\syntaxstyle{\texcmdplain{prexp}[} L \syntaxstyle{]}$
+    は
+      $\syntaxstyle{[} \xi\fprn{L} \syntaxstyle{]}$
+    に展開された後に $a$ が展開されます．
+    例として，\texcmd{csone}，\texcmd{cstwo}，\texcmd{separatetokens}を以下のように定義しましょう：
+\begin{itembox}{code}
+\begin{verbatim}
+\def\csone{JK}%
+\def\cstwo{\csone F}%
+\newcommand{\separatetokens}[3]{%
+  \@tfor\ch:=#1\do{[\ch]}%
+  \@tfor\ch:=#2\do{(\ch)}%
+  \@tfor\ch:=#3\do{\{\ch\}}%
+}%
+\end{verbatim}
+\end{itembox}
+    このとき，例えば
+\begin{itembox}{code}
+\begin{verbatim}
+\separatetokens{\csone V}{CD}{\cstwo W}
+\end{verbatim}
+\end{itembox}
+    とすると出力は\separatetokens{\csone V}{CD}{\cstwo W}となります．
+    さて，これを\texcmd{separatetokens}が展開されるより先に\texcmd{csone}と\texcmd{cstwo}をそれぞれ1回ずつ展開したい場合，
+    \texcmd{prexp}という制御綴を使って
+\begin{itembox}{code}
+\begin{verbatim}
+\expandparams{\separatetokens\prexp{\csone V}{CD}\prexp{\cstwo W}}
+\end{verbatim}
+\end{itembox}
+    と書くことができます．比較として同等な展開制御を\texcmd{expandafter}を使って書くと
+\begin{itembox}{code}
+\begin{verbatim}
+\expandafter\expandafter\expandafter\separatetokens%
+\expandafter\expandafter\expandafter%
+{\expandafter\csone\expandafter V\expandafter}\expandafter%
+{\expandafter C\expandafter D\expandafter}\expandafter{\cstwo W}
+\end{verbatim}
+\end{itembox}
+    となります．得られる結果はともに\expandparams{\separatetokens\prexp{\csone V}{CD}\prexp{\cstwo W}}となります．
+  \par
+  \indent
+    さらに，先行する\texcmd{separatetokens}が展開されるより前に\texcmd{cstwo}を2回展開したい場合，
+    \texcmd{prexp}を2個並べて
+\begin{itembox}{code}
+\begin{verbatim}
+\expandparams{\separatetokens{AB}{CD}\prexp\prexp{\cstwo W}}
+\end{verbatim}
+\end{itembox}
+    と書くことができます．こちらも\texcmd{expandafter}を使うと
+\begin{itembox}{code}
+\begin{verbatim}
+\expandafter\expandafter\expandafter\separatetokens%
+\expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter A%
+\expandafter\expandafter\expandafter B\expandafter\expandafter\expandafter}%
+\expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter C%
+\expandafter\expandafter\expandafter D\expandafter\expandafter\expandafter}%
+\expandafter\expandafter\expandafter{\cstwo W}
+\end{verbatim}
+\end{itembox}
+    となります．いずれも\expandparams{\separatetokens{AB}{CD}\prexp\prexp{\cstwo W}}と出力されます．
+    \par
+\iffalse%
+  \begin{center}
+    \begin{tabular}{ll}
+    \hline
+      \texcmd{expandafter}を使った場合&
+        \expandafter\expandafter\expandafter\separatetokens%
+        \expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter A%
+        \expandafter\expandafter\expandafter B\expandafter\expandafter\expandafter}%
+        \expandafter\expandafter\expandafter{\expandafter\expandafter\expandafter C%
+        \expandafter\expandafter\expandafter D\expandafter\expandafter\expandafter}%
+        \expandafter\expandafter\expandafter{\cstwo W}%
+    \\
+    \hline
+      \texcmd{expandparams}を使った場合&
+        \expandparams{\separatetokens{AB}{CD}\prexp\prexp{\cstwo W}}
+    \\
+    \hline
+    \end{tabular}
+  \end{center}
+\fi%
+\end{document}

@@ -1,3 +1,7 @@
+%+------------------------------------------------------+
+%| expandparams.sty  ver. 0.03                          |
+%|   (C) gfn (@bd_gfngfn on Twitter, gfngfn on GitHub)  |
+%+------------------------------------------------------+
 \newtoks\l@toks%
 \newcount\i@count%
 \newcommand{\inserttoken}[3]{%
@@ -74,7 +78,7 @@
     \fi%
     \advance\i@count by1%
   }%
-  \ifnum\i@count=#2%––”ö‚É’Ç‰Á‚·‚é‚Æ‚«
+  \ifnum\i@count=#2%
       \expandafter\expandafter\expandafter%
         \l@toks%
       \expandafter\expandafter\expandafter%
@@ -97,15 +101,6 @@
   \l@toks={}%
   \expandafter\@tfor\expandafter\t@tforcs\expandafter:\expandafter=\the#1\do{%
     \ifnum\i@count=#2%
-      \expandafter%
-        \l@toks%
-      \expandafter%
-        =%
-      \expandafter%
-        {%
-        \the%
-        \l@toks%
-        }%
     \else%
       \expandafter\ifpluraltokenlist\expandafter{\t@tforcs}{%
         \expandafter\expandafter\expandafter%
@@ -166,55 +161,159 @@
     #3%
   \fi%
 }%
+\newcount\trmt@count%
+\newtoks\trmt@toks%
+\newcommand{\trimtokenlist}[4]{%
+  \trmt@count=0%
+  \trmt@toks={}%
+  \expandafter\@tfor\expandafter\trmt@tforcs\expandafter:\expandafter=\the#1\do{%
+    \ifnum\trmt@count>#2%
+      \ifnum\trmt@count<#3%
+        \expandafter\ifpluraltokenlist\expandafter{\trmt@tforcs}{%
+          \expandafter\expandafter\expandafter%
+            \trmt@toks%
+          \expandafter\expandafter\expandafter%
+            =%
+          \expandafter\expandafter\expandafter%
+            {%
+          \expandafter%
+            \the%
+          \expandafter%
+            \trmt@toks%
+          \expandafter%
+            {%
+            \trmt@tforcs%
+            }%
+            }%
+        }{%
+          \expandafter\expandafter\expandafter%
+            \trmt@toks%
+          \expandafter\expandafter\expandafter%
+            =%
+          \expandafter\expandafter\expandafter%
+            {%
+          \expandafter%
+            \the%
+          \expandafter%
+            \trmt@toks%
+            \trmt@tforcs%
+            }%
+        }%
+      \fi%
+    \fi%
+    \advance\trmt@count by1%
+  }%
+  #4=\trmt@toks%
+}%
 \newtoks\tlxp@toks%
 \newtoks\getxp@toks%
 \newtoks\expanded@toks%
 \newcount\ixp@count%
 \newcount\jxp@count%
-\newif\iffoundprexp%
+\newcount\kxp@count%
+\newif\iffoundprexp@bool%
 \def\prexpsub{\prexp}%
+\def\opensub{[}%
+\def\closesub{]}%
+\newcount\optionbradepth@count%
+\newcount\openpos@count%
+\newcount\closepos@count%
+\newtoks\trimmed@toks%
+\newif\ifseekclose@bool%
+\def\loopsub#1\repeatsub{\def\bodysub{#1}\iteratesub}
+\def\iteratesub{\bodysub \let\nextsub\iteratesub \else\let\nextsub\relax\fi \nextsub}
+\let\repeatsub=\fi % this makes \loop...\if...\repeat skippable
 \newcommand{\expandparams}[1]{%
   \tlxp@toks={#1}%
-  \ixp@count=0%
-  %<loop (to search \prexp)>
-  \loop
-    \foundprexpfalse%
-    %<loop (for each token)>
+  %<loop to seek '\prexp'>
+  \loop%
+    \ixp@count=0%
+    \seekclose@boolfalse%
+    \foundprexp@boolfalse%
+    %<loop for each token>
     \expandafter\@tfor\expandafter\txp@tforcs\expandafter:\expandafter=\the\tlxp@toks\do{%
-      \ifx\txp@tforcs\prexpsub%
-        \iffoundprexp%
+      \ifseekclose@bool% (if on seeking '\prexp')
+        \ifx\txp@tforcs\opensub% (if '[' found)
+          \advance\optionbradepth@count by1\relax%
         \else%
-          \foundprexptrue%
-          \jxp@count=\ixp@count%
-          \advance\jxp@count by1%
-          \gettoken{\tlxp@toks}{\jxp@count}{\getxp@toks}% get the token next to \prexp
-          \expandafter\def\expandafter\tempparam@defcs\expandafter{\the\getxp@toks}%
-          \ifx\tempparam@defcs\prexpsub%
-            \foundprexpfalse%
+          \ifx\txp@tforcs\closesub% (if ']' found)
+            \advance\optionbradepth@count by-1\relax%
+            \ifnum\optionbradepth@count=0\relax% (if the end ']' of the optional parameter found)
+              \seekclose@boolfalse%
+              \closepos@count=\ixp@count%
+              \foundprexp@booltrue%
+              \deletetoken{\tlxp@toks}{\openpos@count}% (delete '\prexp')
+              \advance\closepos@count by-1%
+                % ('\openpos@count' holds the position of '[')
+                % ('\closepos@count' holds the position of ']')
+             \trimtokenlist{\tlxp@toks}{\openpos@count}{\closepos@count}{\trimmed@toks}%
+              \expandtokenlistsub{\trimmed@toks}{\expanded@toks}%
+              \advance\openpos@count by1\relax%
+                % ('\openpos@count' holds the position of the first token of the content)
+              \kxp@count=\openpos@count%
+              \multiply\kxp@count by-1\relax%
+              \advance\kxp@count by\closepos@count%
+              \jxp@count=0\relax%
+              %<loop>
+              \loopsub%
+                \deletetoken{\tlxp@toks}{\openpos@count}%
+                \advance\jxp@count by1\relax%
+              \ifnum\jxp@count<\kxp@count \repeatsub%
+              %</loop>
+              \expandafter\inserttoken%
+                \expandafter{\expandafter\tlxp@toks\expandafter}%
+                \expandafter{\expandafter\openpos@count\expandafter}%
+                \expandafter{\the\expanded@toks}%
+            \fi%
+          \fi%
+        \fi%
+      \else%
+        \ifx\txp@tforcs\prexpsub% (if '\prexp' found)
+          \iffoundprexp@bool%
           \else%
-            \deletetoken{\tlxp@toks}{\ixp@count}% delete \prexp
-            \expandtokenlist{\getxp@toks}{\expanded@toks}%
-            \deletetoken{\tlxp@toks}{\ixp@count}%
-            \expandafter\inserttoken\expandafter{\expandafter\tlxp@toks\expandafter}\expandafter{\expandafter\ixp@count\expandafter}\expandafter{\expandafter{\the\expanded@toks}}%
+            \jxp@count=\ixp@count%
+            \advance\jxp@count by1%
+            \gettoken{\tlxp@toks}{\jxp@count}{\getxp@toks}% (get the token next to '\prexp')
+            \expandafter\def\expandafter\tempparam@defcs\expandafter{\the\getxp@toks}%
+            \ifx\tempparam@defcs\prexpsub% (if the next token of '\prexp' is also '\prexp')
+              % (then ignore the former '\prexp' to deal with the latter '\prexp')
+            \else%
+              \ifx\tempparam@defcs\opensub% (if the next token of '\prexp' is '[')
+                \seekclose@booltrue%
+                \openpos@count=\ixp@count% (save the position of '\prexp', not that of '[')
+                \optionbradepth@count=0%
+              \else%
+                \foundprexp@booltrue%
+                \deletetoken{\tlxp@toks}{\ixp@count}% (delete '\prexp')
+                \expandtokenlist{\getxp@toks}{\expanded@toks}%
+                \deletetoken{\tlxp@toks}{\ixp@count}%
+                \expandafter\inserttoken%
+                  \expandafter{\expandafter\tlxp@toks\expandafter}%
+                  \expandafter{\expandafter\ixp@count\expandafter}%
+                  \expandafter{\expandafter{\the\expanded@toks}}%
+              \fi%
+            \fi%
           \fi%
         \fi%
       \fi%
       \advance\ixp@count by1%
     }%
-    %</loop>
-    \ixp@count=0%
-  \iffoundprexp \repeat%
-  %</loop>
+    %</loop for each token>
+  \iffoundprexp@bool\repeat%
+  %</loop to seek 'prexp'>
+  \ifseekclose@bool%
+    \@warning{![expandparams] bracket of optional parameter '[' and ']' does not matched.}%
+  \fi%
   \the\tlxp@toks%
 }%
-\newif\ifreadfirsttoken@bool%
 \newcommand{\expandtokenlist}[2]{%
-  \readfirsttoken@boolfalse%
   \expandafter\@tfor\expandafter\xptl@tforcs\expandafter:\expandafter=\the#1\do{%
-    \ifreadfirsttoken@bool%
-    \else%
-      \expandafter\expandafter\expandafter#2\expandafter\expandafter\expandafter=\expandafter\expandafter\expandafter{\xptl@tforcs}%
-      \readfirsttoken@booltrue%
-    \fi%
+    %(apply single group to \@tfor in order to withdraw the inner content)
+    \expandafter\expandafter\expandafter#2%
+      \expandafter\expandafter\expandafter=%
+      \expandafter\expandafter\expandafter{\xptl@tforcs}%
   }%
+}%
+\newcommand{\expandtokenlistsub}[2]{%
+  \expandafter\expandafter\expandafter#2\expandafter\expandafter\expandafter=\expandafter\expandafter\expandafter{\the#1}%
 }%
