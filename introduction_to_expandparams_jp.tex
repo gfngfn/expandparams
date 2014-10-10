@@ -5,12 +5,10 @@
   \newcommand{\sepbybra}[1]{\@tfor\ch:=#1\do{[\ch]}}%
   \newcommand{\sepbybraparen}[2]{\@tfor\ch:=#1\do{[\ch]}\@tfor\ch:=#2\do{(\ch)}}%
   \newcommand{\separatetokens}[3]{\@tfor\ch:=#1\do{[\ch]}\@tfor\ch:=#2\do{(\ch)}\@tfor\ch:=#3\do{\{\ch\}}}%
-  \def\csone{JK}%
-  \def\cstwo{\csone F}
-  \newtoks\temptl%
-  \newtoks\temptlii%
-  \newtoks\temptoken%
-  \temptl={L\csone M}%
+  \def\csone{GF}%
+  \def\cstwo{\csone N}
+  \def\openbra{[}%
+  \def\closebra{]}%
 %
   \usepackage{amsmath}
   \usepackage{url}
@@ -22,12 +20,12 @@
 %
   \newcommand{\texcmdplain}[1]{\textbackslash #1}
   \newcommand{\texcmd}[1]{\textcolor{blue}{\texttt{\texcmdplain{#1}}}}
-  \newcommand{\reqref}{$\empty^{［要出典］}$}
+  \newcommand{\reqref}{$\!\empty^{［要出典］}$}
   \newcommand{\syntaxstyle}[1]{\text{\textcolor{blue}{\texttt{#1}}}}
   \newcommand{\cflarrow}{\to}
   \newcommand{\cflbar}{\ |\ }
 %
-  \title{\texttt{expandparams}の用法 第1.01版}
+  \title{\texttt{expandparams}の用法 第1.02版}
   \author{gfn（Twitter: \url{@bd_gfngfn}, GitHub: \url{gfngfn}）}
   %\date{2014/10/9}
 \makeatother
@@ -50,16 +48,17 @@
     考案したのが\texttt{expandparams}パッケージの制御綴\texcmd{expandparams}と\texcmd{prexp}です．
   \par
   \section{\texcmd{expandparams}と\texcmd{prexp}の使い方}
+  \subsection{一般仕様}
   \indent
     \texcmd{expandparams}は，入力上先行する制御綴よりも順序的に先に引数を何度か展開したい場合に使うことができ，
     これにより数百個もの\texcmd{expandafter}を書かずに済むことになります．
     $n$ を非負整数，$a$ を $n$ 個の引数を取って展開されるトークン，
-    $t$ を $\syntaxstyle{\{}$，$\syntaxstyle{\}}$，$\syntaxstyle{[}$，$\syntaxstyle{]}$ のいずれでもないトークンとして，
+    $t$ を $\syntaxstyle{\{}$，$\syntaxstyle{\}}$，$\syntaxstyle{[}$，$\syntaxstyle{]}$, $\syntaxstyle{\textvisiblespace}$ のいずれでもないトークンとして，
     \texcmd{expandparams}は
     \begin{align*}
-      E &\cflarrow \syntaxstyle{\texcmdplain{expandparams}} \syntaxstyle{\{} a T_{1} \ldots T_{n} \syntaxstyle{\}}
+      E &\cflarrow \syntaxstyle{\texcmdplain{expandparams}} \syntaxstyle{\{} a \underbrace{T \cdots T}_{n\text{個}} \syntaxstyle{\}}
     \\
-      T_{i} &\cflarrow B \cflbar \syntaxstyle{\texcmdplain{prexp}} B \quad\paren{i = 1, \ldots, n}
+      T &\cflarrow B \cflbar \syntaxstyle{\texcmdplain{prexp}} T
     \\
       B &\cflarrow \syntaxstyle{\{} L \syntaxstyle{\}} \cflbar \syntaxstyle{[} L \syntaxstyle{]}
     \\
@@ -75,12 +74,28 @@
       $\syntaxstyle{\texcmdplain{prexp}[} L \syntaxstyle{]}$
     は
       $\syntaxstyle{[} \xi\fprn{L} \syntaxstyle{]}$
-    に展開された後に $a$ が展開されます．
-    例として，\texcmd{csone}，\texcmd{cstwo}，\texcmd{separatetokens}を以下のように定義しましょう：
+    に前から順に\footnote{正確には，連続して並ぶ\texcmd{prexp}は後ろのものから順に展開しています．}展開され，
+    すべての\texcmd{prexp}が処理された後に先頭から窮極展開\footnote{展開可能な限り展開することを指します．}されます．
+    また，\texcmd{expandparams}を入れ子にすることは現在のところ意図していません．
+    特に開き四角括弧 $\syntaxstyle{[}$，閉じ四角括弧 $\syntaxstyle{]}$, 空白 $\syntaxstyle{\textvisiblespace}$ は
+    トークンとして\texcmd{expandparams}の引数中で使用することを非推奨としていますが，
+    $\syntaxstyle{[}$，$\syntaxstyle{]}$を使用したい場合は
 \begin{itembox}{code}
 \begin{verbatim}
-\def\csone{JK}%
-\def\cstwo{\csone F}%
+\def\openbra{[}%
+\def\closebra{]}%
+\end{verbatim}
+\end{itembox}
+    などと定義してエスケープさせ，また空白$\syntaxstyle{\textvisiblespace}$ は\texcmd{\textvisiblespace}で代替して，
+    窮極展開が始まるまで展開しないように記述してください（例は後述）．
+  \par
+  \subsection{基本的な使用例}
+  \indent
+    さて，ここからは例として，\texcmd{csone}，\texcmd{cstwo}，\texcmd{separatetokens}を以下のように定義しましょう：
+\begin{itembox}{code}
+\begin{verbatim}
+\def\csone{GF}%
+\def\cstwo{\csone N}%
 \newcommand{\separatetokens}[3]{%
   \@tfor\ch:=#1\do{[\ch]}%
   \@tfor\ch:=#2\do{(\ch)}%
@@ -133,7 +148,7 @@
 \end{verbatim}
 \end{itembox}
     となります．いずれも\expandparams{\separatetokens{AB}{CD}\prexp\prexp{\cstwo W}}と出力されます．
-    \par
+  \par
 \iffalse%
   \begin{center}
     \begin{tabular}{ll}
@@ -154,4 +169,43 @@
     \end{tabular}
   \end{center}
 \fi%
+  \subsection{四角括弧と空白のエスケープ}
+  \indent
+    四角括弧と空白のエスケープによる表現の例を掲げます．
+\begin{itembox}{code}
+\begin{verbatim}
+\expandparams{\separatetokens\prexp{\cstwo}%
+  {*\openbra*\ }{*\closebra*\ }}
+\end{verbatim}
+\end{itembox}
+    と書くと\expandparams{\separatetokens\prexp{\cstwo}{*\openbra*\ }{*\closebra*\ }}のように出力されます．
+  \par
+  \subsection{引数を途中から展開する例}
+  \indent
+    ここまで見てきた例はいずれも $\syntaxstyle{\{}$ と $\syntaxstyle{\}}$ で括られる引数の先頭のトークンから展開するものでしたが，
+\begin{itembox}{code}
+\begin{verbatim}
+\separatetokens{\csone A}{B\cstwo}{C}
+\end{verbatim}
+\end{itembox}
+    の第2引数の\texcmd{cstwo}を\texcmd{separatetokens}より先に展開したい場合のように，引数の途中から展開したいときは，
+    \texcmd{expandparams}と\texcmd{prexp}だけで簡潔に書くのはどうしても無理があります．この場合は引数の手前に\texcmd{prexp}を置いておき，
+    中の展開制御は\texcmd{expandafter}で行ないます．ここでは
+\begin{itembox}{code}
+\begin{verbatim}
+\expandparams{\separatetokens{\csone A}\prexp{\expandafter B\cstwo}{C}}
+\end{verbatim}
+\end{itembox}
+    とすると出力は\expandparams{\separatetokens{\csone A}\prexp{\expandafter B\cstwo}{C}}となり，\texcmd{cstwo}が展開されていることがわかります．
+    2回展開する場合は，
+\begin{itembox}{code}
+\begin{verbatim}
+\expandparams{\separatetokens{\csone A}%
+  \prexp\prexp{\expandafter\expandafter\expandafter B\cstwo}{C}}
+\end{verbatim}
+\end{itembox}
+    とすると出力を%
+    \expandparams{\separatetokens{\csone A}%
+      \prexp\prexp{\expandafter\expandafter\expandafter B\cstwo}{C}}%
+    とすることができます．\texcmd{prexp}も2個書いていることに注意してください．
 \end{document}
