@@ -4,7 +4,7 @@
 %+------------------------------------------------------+
 \newtoks\l@toks%
 \newcount\i@count%
-\newcommand{\inserttoken}[3]{%
+\def\inserttoken#1#2#3{%
   \i@count=0%
   \l@toks={}%
   \def\inserted@defcs{#3}%
@@ -96,7 +96,7 @@
   \fi%
   #1=\l@toks%
 }%
-\newcommand{\deletetoken}[2]{%
+\def\deletetoken#1#2{%
   \i@count=0%
   \l@toks={}%
   \expandafter\@tfor\expandafter\t@tforcs\expandafter:\expandafter=\the#1\do{%
@@ -137,7 +137,7 @@
   }%
   #1=\l@toks%
 }%
-\newcommand{\gettoken}[3]{%
+\def\gettoken#1#2#3{%
   \i@count=0%
   #3={}%
   \expandafter\@tfor\expandafter\t@tforcs\expandafter:\expandafter=\the#1\do{%
@@ -152,7 +152,7 @@
   }%
 }%
 \newcount\ptl@count%
-\newcommand{\ifpluraltokenlist}[3]{%
+\def\ifpluraltokenlist#1#2#3{%
   \ptl@count=0%
   \@tfor\ptl@tforcs:=#1\do{\advance\ptl@count by1}%
   \ifnum\ptl@count>1%
@@ -163,7 +163,7 @@
 }%
 \newcount\trmt@count%
 \newtoks\trmt@toks%
-\newcommand{\trimtokenlist}[4]{%
+\def\trimtokenlist#1#2#3#4{%
   \trmt@count=0%
   \trmt@toks={}%
   \expandafter\@tfor\expandafter\trmt@tforcs\expandafter:\expandafter=\the#1\do{%
@@ -223,7 +223,7 @@
 \def\loopsub#1\repeatsub{\def\bodysub{#1}\iteratesub}
 \def\iteratesub{\bodysub \let\nextsub\iteratesub \else\let\nextsub\relax\fi \nextsub}
 \let\repeatsub=\fi % this makes \loop...\if...\repeat skippable
-\newcommand{\expandparams}[1]{%
+\def\expandparams#1{%
   \tlxp@toks={#1}%
   %<loop to seek '\prexp'>
   \loop%
@@ -306,7 +306,7 @@
   \fi%
   \the\tlxp@toks%
 }%
-\newcommand{\expandtokenlist}[2]{%
+\def\expandtokenlist#1#2{%
   \expandafter\@tfor\expandafter\xptl@tforcs\expandafter:\expandafter=\the#1\do{%
     %(apply single group to \@tfor in order to withdraw the inner content)
     \expandafter\expandafter\expandafter#2%
@@ -314,6 +314,6 @@
       \expandafter\expandafter\expandafter{\xptl@tforcs}%
   }%
 }%
-\newcommand{\expandtokenlistsub}[2]{%
+\def\expandtokenlistsub#1#2{%
   \expandafter\expandafter\expandafter#2\expandafter\expandafter\expandafter=\expandafter\expandafter\expandafter{\the#1}%
 }%
